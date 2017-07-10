@@ -1,0 +1,7 @@
+__pycache__
+temp_*
+*.log
+.venv
+*_reports
+project_info
+

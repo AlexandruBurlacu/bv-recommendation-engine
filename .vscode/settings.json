@@ -1,0 +1,28 @@
+// Place your settings in this file to overwrite default and user settings.
+{
+    "files.autoSave": "onWindowChange",
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.tabCompletion": true,
+    "editor.fontFamily": "Fira Code",
+    "editor.lineNumbers": "relative",
+    "editor.detectIndentation": true,
+    "editor.parameterHints": true,
+    "editor.autoClosingBrackets": true,
+    "editor.acceptSuggestionOnEnter": true,
+    "editor.snippetSuggestions": "bottom",
+    "editor.fontLigatures": true,
+    "editor.codeLens": true,
+    "editor.folding": true,
+    "editor.matchBrackets": true,
+    "editor.trimAutoWhitespace": true,
+    "diffEditor.renderIndicators": true,
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.linting.lintOnSave": true,
+    "python.linting.pylintPath": ".venv/bin/pylint",
+    "python.unitTest.unittestEnabled": true,
+    "python.autoComplete.preloadModules": [
+        "falcon"
+    ]
+}
