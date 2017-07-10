@@ -1,10 +1,18 @@
-"""`api` module
+"""API module
+
 Here are implemented all the resources of the `Recommendation` service.
 """
+
+# Author: Alexandru Burlacu
+# Email:  alexandru-varacuta@bookvoyager.org
+
 
 import json
 import logging
 import falcon
+
+import utils
+# from logic import <smth/>
 
 def parse(stream):
     """Parses bytestring to dict"""
@@ -36,7 +44,7 @@ class DummyStorageException(Exception):
 class RecommenderResource:
     def __init__(self):
         self._logger = logging.getLogger("test.logger")
-        self._db = DummyStorage("localhost:27017")
+        # self._db = DummyStorage("localhost:27017")
 
     def on_get(self, req, resp):
         """GET method handler"""
@@ -46,8 +54,8 @@ class RecommenderResource:
 
         resp.content_type = "application/json"
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(self._db.fetch_with_contraints({"book_name": book_name,
-                                                               "filters": filters}))
+        resp.body = json.dumps(utils.db_fetch({"book_name": book_name,
+                                               "filters": filters}))
 
 
 
