@@ -22,6 +22,7 @@ Initially, you need `python` 3.5.x or higher and `virtualenv` to be installed on
 ## Testing
 
 Currently, for testing purposes are used doctests, eventually unit tests may be added.
+To run tests type `./runtests` in the terminal.
 
 
 ## Style Guide

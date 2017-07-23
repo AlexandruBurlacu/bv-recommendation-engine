@@ -1,4 +1,3 @@
 {
-    "mongo_rpc_interface_addr": "localhost",
-    "mongo_rpc_interface_port": 10000
+    "mongo_rest_interface_addr": "localhost:10000"
 }

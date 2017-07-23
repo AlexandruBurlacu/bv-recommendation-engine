@@ -44,6 +44,7 @@ class DummyStorageException(Exception):
 class RecommenderResource:
     def __init__(self):
         self._logger = logging.getLogger("test.logger")
+        self._db_url = utils.get_config()["mongo_rest_interface_addr"]
         # self._db = DummyStorage("localhost:27017")
 
     def on_get(self, req, resp):
@@ -54,8 +55,8 @@ class RecommenderResource:
 
         resp.content_type = "application/json"
         resp.status = falcon.HTTP_200
-        resp.body = json.dumps(utils.db_fetch({"book_name": book_name,
-                                               "filters": filters}))
+        resp.body = json.dumps(utils.db_fetch(self._db_url, {"book_name": book_name,
+                                                             "filters": filters}))
 
 
 
