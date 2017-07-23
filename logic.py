@@ -169,8 +169,4 @@ def get_top_candidates(raw_base, raw_fetched_objs, top_n=5):
 
     scores = list(similarity(base, obj) for obj in fetched_objs)
 
-    print(scores)
-
-    print(list(compute_score(scores)))
-
-    # return sorted(scores)[:top_n]
+    return sorted(compute_score(scores))[:top_n]
