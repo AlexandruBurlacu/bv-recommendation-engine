@@ -46,7 +46,7 @@ def db_fetch(db_service_url, constraints):
     resp = requests.post(db_service_url + "/fetch",
                          json={"constraints": json.dumps(constraints)},
                          headers={"content-type": "application/json"})
-    return json.loads((resp.content).decode("utf-8"))
+    return json.loads(resp.content.decode("utf-8"))
 
 def compose(f_fun, g_fun):
     """Composition of unary functions"""

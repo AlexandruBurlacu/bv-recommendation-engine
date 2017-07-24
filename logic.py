@@ -8,10 +8,10 @@ database and for mesuring similarity between books.
 # Email:  alexandru-varacuta@bookvoyager.org
 
 from math import sqrt
+import json
 
 from utils import get_config, db_fetch, compose
 
-CONFIG = get_config()
 
 def reshape_transform(objs):
     """Reshapes an iterable of 4-tuple to a dict of lists
@@ -169,4 +169,16 @@ def get_top_candidates(raw_base, raw_fetched_objs, top_n=5):
 
     scores = list(similarity(base, obj) for obj in fetched_objs)
 
-    return sorted(compute_score(scores))[:top_n]
+    return sorted(compute_score(scores), reverse=True)[:top_n]
+
+def _main():
+    config = get_config()
+    data = json.loads(db_fetch(config["mongo_rest_interface_addr"], {}))["resp"]
+    base, candidates = data[0], data[1:]
+
+    top_15 = get_top_candidates(base, candidates, top_n=15)
+
+    print(top_15)
+
+if __name__ == '__main__':
+    _main()
