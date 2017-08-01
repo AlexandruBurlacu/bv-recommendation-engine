@@ -56,7 +56,7 @@ def get_book_by_id(book_id):
     return db_fetch(get_config()["mongo_rest_interface_addr"], {"id": book_id})
 
 def search_by_auth_or_title(search_token):
-    return db_fetch(get_config()["mongo_rest_interface_addr"], {"$or": [{"sentiment.overall.sadness": {"$lt": -int(search_token)}}, {"sentiment.overall.joy": {"$gt": int(search_token)}}]})
-                    # {"$or": [{"metadata.author": search_token},
-                    #          {"metadata.title": search_token}]})
+    return db_fetch(get_config()["mongo_rest_interface_addr"],
+                    {"$or": [{"metadata.author": search_token},
+                             {"metadata.title": search_token}]})
 
