@@ -159,6 +159,8 @@ def compute_score(similar_books):
 def get_top_candidates(raw_base, raw_fetched_objs, top_n=5):
     get_timeline = compose(reshape_transform, lambda o: o["sentiment"]["timeline"])
 
+    print(raw_base)
+
     base_sentiment = get_timeline(raw_base)
     fetched_objs_sentiment = list(map(get_timeline, raw_fetched_objs))
 
@@ -178,7 +180,7 @@ def _main():
 
     top_15 = get_top_candidates(base, candidates, top_n=15)
 
-    print(top_15)
+    # print(top_15)
 
 if __name__ == '__main__':
     _main()

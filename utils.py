@@ -51,3 +51,8 @@ def db_fetch(db_service_url, constraints):
 def compose(f_fun, g_fun):
     """Composition of unary functions"""
     return lambda x: f_fun(g_fun(x))
+
+
+def get_book_by_id(book_id):
+    """Get book by MongoDB ID"""
+    return db_fetch(get_config()["mongo_rest_interface_addr"], {"id": book_id})

@@ -1,65 +1,28 @@
-"""API module
+from flask import Flask, request, jsonify
 
-Here are implemented all the resources of the `Recommendation` service.
-"""
-
-# Author: Alexandru Burlacu
-# Email:  alexandru-varacuta@bookvoyager.org
-
+from logic import get_top_candidates
+from utils import get_book_by_id
 
 import json
-import logging
-import falcon
 
-import utils
-# from logic import <smth/>
+app = Flask(__name__)
 
-def parse(stream):
-    """Parses bytestring to dict"""
-    kv_list = stream.decode("utf-8").replace("=", ":").split("&")
-    data = [xy.split(":") for xy in kv_list]
+@app.route("/api/v1/books/<book_id>", methods=["GET"])
+def get_book(book_id):
+    return get_book_by_id(str(book_id))
 
-    return {x: y for x, y in data}
+@app.route("/api/v1/books", methods=["GET"])
+def list_all_books():
+    search_query = request.args.get("q", "")
+    return search_query # TODO: search function (db_fetch q)
 
-
-class DummyStorage:
-    """DummyStorage"""
-    def __init__(self, addr):
-        self._db_proxy = "It's a server, running at {}".format(addr)
-
-    def fetch_with_contraints(self, contraints):
-        """fetch_with_contraints"""
-        pass
-
-class DummyStorageException(Exception):
-    """DummyStorageException"""
-
-    @staticmethod
-    def handle(ex, req, resp, params):
-        """Error handler"""
-        raise falcon.HTTPError(falcon.HTTP_404, "Some generic shit happen")
-
-#########################################################################################
-
-class RecommenderResource:
-    def __init__(self):
-        self._logger = logging.getLogger("test.logger")
-        self._db_url = utils.get_config()["mongo_rest_interface_addr"]
-        # self._db = DummyStorage("localhost:27017")
-
-    def on_get(self, req, resp):
-        """GET method handler"""
-        book_name = req.get_param("book_name")
-        filters = parse(req.stream.read())
+@app.route("/api/v1/books/<book_id>/recommendations", methods=["POST"])
+def recommend(book_id):
+    filters = request.get_json() # TODO: data arives as form
+    app.logger.debug(filters)
+    return "200"
 
 
-        resp.content_type = "application/json"
-        resp.status = falcon.HTTP_200
-        resp.body = json.dumps(utils.db_fetch(self._db_url, {"book_name": book_name,
-                                                             "filters": filters}))
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8001, debug=True)
 
-
-
-api = falcon.API()
-api.add_route("/", RecommenderResource())
-api.add_error_handler(DummyStorageException, DummyStorageException.handle)
