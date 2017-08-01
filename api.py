@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 
 from logic import get_top_candidates
-from utils import get_book_by_id
+from utils import get_book_by_id, search_by_auth_or_title
 
 import json
 
@@ -14,12 +14,11 @@ def get_book(book_id):
 @app.route("/api/v1/books", methods=["GET"])
 def list_all_books():
     search_query = request.args.get("q", "")
-    return search_query # TODO: search function (db_fetch q)
+    return search_by_auth_or_title(search_query)
 
 @app.route("/api/v1/books/<book_id>/recommendations", methods=["POST"])
 def recommend(book_id):
-    filters = request.get_json() # TODO: data arives as form
-    app.logger.debug(filters)
+    filters = request.get_json()
     return "200"
 
 

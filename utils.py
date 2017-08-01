@@ -12,6 +12,9 @@ import requests
 
 PATH = os.path.abspath(os.path.dirname(__file__))
 
+def compose(f_fun, g_fun):
+    """Composition of unary functions"""
+    return lambda x: f_fun(g_fun(x))
 
 def get_config(config_file_path=os.path.join(PATH, "config.json")):
     """Loads the configuration file.
@@ -48,11 +51,12 @@ def db_fetch(db_service_url, constraints):
                          headers={"content-type": "application/json"})
     return json.loads(resp.content.decode("utf-8"))
 
-def compose(f_fun, g_fun):
-    """Composition of unary functions"""
-    return lambda x: f_fun(g_fun(x))
-
-
 def get_book_by_id(book_id):
     """Get book by MongoDB ID"""
     return db_fetch(get_config()["mongo_rest_interface_addr"], {"id": book_id})
+
+def search_by_auth_or_title(search_token):
+    return db_fetch(get_config()["mongo_rest_interface_addr"], {"$or": [{"sentiment.overall.sadness": {"$lt": -int(search_token)}}, {"sentiment.overall.joy": {"$gt": int(search_token)}}]})
+                    # {"$or": [{"metadata.author": search_token},
+                    #          {"metadata.title": search_token}]})
+
