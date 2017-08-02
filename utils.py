@@ -56,7 +56,11 @@ def get_book_by_id(book_id):
     return db_fetch(get_config()["mongo_rest_interface_addr"], {"id": book_id})
 
 def search_by_auth_or_title(search_token):
+    """Given a string, perform a regex search over `author` and `title` fields of a book."""
+    token = search_token.lower()
     return db_fetch(get_config()["mongo_rest_interface_addr"],
-                    {"$or": [{"metadata.author": search_token},
-                             {"metadata.title": search_token}]})
+                    {"$or": [{"metadata.author": {"$regex": r"^({})\w+".format(token),
+                                                  "$options": "i"}},
+                             {"metadata.title":  {"$regex": r"^({})\w+".format(token),
+                                                  "$options": "i"}}]})
 

@@ -23,6 +23,7 @@
     "python.linting.pylintPath": ".venv/bin/pylint",
     "python.unitTest.unittestEnabled": true,
     "python.autoComplete.preloadModules": [
-        "falcon"
-    ]
+        "flask"
+    ],
+    "editor.multiCursorModifier": "alt"
 }
