@@ -13,6 +13,7 @@ import json
 from utils import get_config, db_fetch, compose
 
 
+
 def reshape_transform(objs):
     """Reshapes an iterable of 4-tuple to a dict of lists
 

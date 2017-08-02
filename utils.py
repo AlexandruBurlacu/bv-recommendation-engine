@@ -51,16 +51,52 @@ def db_fetch(db_service_url, constraints):
                          headers={"content-type": "application/json"})
     return json.loads(resp.content.decode("utf-8"))
 
-def get_book_by_id(book_id):
+def get_book_by_id(config, book_id):
     """Get book by MongoDB ID"""
-    return db_fetch(get_config()["mongo_rest_interface_addr"], {"id": book_id})
+    return db_fetch(config, {"id": book_id})
 
-def search_by_auth_or_title(search_token):
+def search_by_auth_or_title(config, search_token):
     """Given a string, perform a regex search over `author` and `title` fields of a book."""
     token = search_token.lower()
-    return db_fetch(get_config()["mongo_rest_interface_addr"],
-                    {"$or": [{"metadata.author": {"$regex": r"^({})\w+".format(token),
-                                                  "$options": "i"}},
-                             {"metadata.title":  {"$regex": r"^({})\w+".format(token),
-                                                  "$options": "i"}}]})
+    return db_fetch(config, {"$or": [{"metadata.author": {"$regex": r"^({})\w+".format(token),
+                                                          "$options": "i"}},
+                                     {"metadata.title":  {"$regex": r"^({})\w+".format(token),
+                                                          "$options": "i"}}]})
 
+def _preprocess_filter(key, obj, default_dict):
+    values = map(lambda v: v.lower().replace("_", ""), obj["filters"][key])
+    [default_dict.update({val: 1}) for val in values]
+
+    return default_dict
+
+
+
+def make_query(obj):
+    characters_dict = {
+        "aliens": 0,
+        "mutants": 0,
+        "robots": 0,
+        "humanoiddroids": 0,
+        "dragons": 0,
+        "superintelligence": 0
+    }
+
+    space_dict = {
+        "insideearth": 0,
+        "otherplanets": 0,
+        "outerspace": 0,
+        "beyondsolarsystem": 0
+
+    }
+
+    characters = _preprocess_filter("characters", obj, characters_dict)
+    space = _preprocess_filter("spaceSetting", obj, space_dict)
+    # time_raw = obj["filters"]["timeSetting"] # TODO: add time settings later
+
+    author = obj["filters"]["metadata"]["author"]["value"].lower()
+
+    return {
+        # "metadata.author": author,
+        "genre.characters.labels": characters,
+        "genre.space.labels": space
+        }
