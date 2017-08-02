@@ -12,8 +12,6 @@ import json
 
 from utils import get_config, db_fetch, compose
 
-
-
 def reshape_transform(objs):
     """Reshapes an iterable of 4-tuple to a dict of lists
 
@@ -159,8 +157,6 @@ def compute_score(similar_books):
 
 def get_top_candidates(raw_base, raw_fetched_objs, top_n=5):
     get_timeline = compose(reshape_transform, lambda o: o["sentiment"]["timeline"])
-
-    print(raw_base)
 
     base_sentiment = get_timeline(raw_base)
     fetched_objs_sentiment = list(map(get_timeline, raw_fetched_objs))

@@ -58,9 +58,9 @@ def get_book_by_id(config, book_id):
 def search_by_auth_or_title(config, search_token):
     """Given a string, perform a regex search over `author` and `title` fields of a book."""
     token = search_token.lower()
-    return db_fetch(config, {"$or": [{"metadata.author": {"$regex": r"^({})\w+".format(token),
+    return db_fetch(config, {"$or": [{"metadata.author": {"$regex": r"({})\w*".format(token),
                                                           "$options": "i"}},
-                                     {"metadata.title":  {"$regex": r"^({})\w+".format(token),
+                                     {"metadata.title":  {"$regex": r"({})\w*".format(token),
                                                           "$options": "i"}}]})
 
 def _preprocess_filter(key, obj, default_dict):
@@ -96,7 +96,7 @@ def make_query(obj):
     author = obj["filters"]["metadata"]["author"]["value"].lower()
 
     return {
-        # "metadata.author": author,
+        "metadata.author": author,
         "genre.characters.labels": characters,
         "genre.space.labels": space
         }
