@@ -65,7 +65,7 @@ def search_by_auth_or_title(addr, search_token):
 
 def _preprocess_filter(key, obj, default_dict):
     values = map(lambda v: v.lower().replace("_", ""), obj["filters"][key])
-    [default_dict.update({val: 1}) for val in values]
+    [default_dict.update({val: 1}) for val in values] # [WARNING] change in-place
 
     return default_dict
 

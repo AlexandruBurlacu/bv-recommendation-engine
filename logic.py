@@ -12,8 +12,16 @@ import json
 
 from utils import get_config, db_fetch, compose
 
-def reshape_timeline(checkpoints):
+def _reshape_timeline(checkpoints):
     return map(lambda x: x, checkpoints)
+
+def preprocess_resp(raw_resp):
+    """Applies transformations over the response body"""
+    resp = json.loads(raw_resp)["resp"][0]
+    timeline = _reshape_timeline(resp["sentiment"]["timeline"])
+
+    resp["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
+    return json.dumps(resp)
 
 def reshape_transform(objs):
     """Reshapes an iterable of 4-tuple to a dict of lists
