@@ -51,17 +51,17 @@ def db_fetch(db_service_url, constraints):
                          headers={"content-type": "application/json"})
     return json.loads(resp.content.decode("utf-8"))
 
-def get_book_by_id(config, book_id):
+def get_book_by_id(addr, book_id):
     """Get book by MongoDB ID"""
-    return db_fetch(config, {"id": book_id})
+    return db_fetch(addr, {"id": book_id})
 
-def search_by_auth_or_title(config, search_token):
+def search_by_auth_or_title(addr, search_token):
     """Given a string, perform a regex search over `author` and `title` fields of a book."""
     token = search_token.lower()
-    return db_fetch(config, {"$or": [{"metadata.author": {"$regex": r"({})\w*".format(token),
-                                                          "$options": "i"}},
-                                     {"metadata.title":  {"$regex": r"({})\w*".format(token),
-                                                          "$options": "i"}}]})
+    return db_fetch(addr, {"$or": [{"metadata.author": {"$regex": r"({})\w*".format(token),
+                                                        "$options": "i"}},
+                                   {"metadata.title":  {"$regex": r"({})\w*".format(token),
+                                                        "$options": "i"}}]})
 
 def _preprocess_filter(key, obj, default_dict):
     values = map(lambda v: v.lower().replace("_", ""), obj["filters"][key])
