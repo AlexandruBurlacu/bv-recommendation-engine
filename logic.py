@@ -16,12 +16,21 @@ def _reshape_timeline(checkpoints):
     return map(lambda x: x, checkpoints)
 
 def preprocess_resp(raw_resp):
-    """Applies transformations over the response body"""
-    resp = json.loads(raw_resp)["resp"][0]
-    timeline = _reshape_timeline(resp["sentiment"]["timeline"])
+    """Applies transformations over the response body
 
-    resp["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
-    return json.dumps(resp)
+    It becomes ugly as hell, sorry.
+    """
+    resp = json.loads(raw_resp)["resp"]
+    condition = len(resp)
+    if condition == 1:
+        timeline = _reshape_timeline(resp[0]["sentiment"]["timeline"])
+        resp["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
+    elif condition > 1:
+        timelines = [_reshape_timeline(r["sentiment"]["timeline"]) for r in resp]
+        [r["sentiment"].update({"timeline": list(timeline)}) for r, timeline in zip(resp, timelines)]
+        # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [WARNING] change in-place
+
+    return json.dumps(resp), {"Content-Type": "application/json"}
 
 def reshape_transform(objs):
     """Reshapes an iterable of 4-tuple to a dict of lists
