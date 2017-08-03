@@ -8,6 +8,7 @@ database and for mesuring similarity between books.
 # Email:  alexandru-varacuta@bookvoyager.org
 
 from math import sqrt
+from itertools import islice
 import json
 
 from utils import get_config, db_fetch, compose
@@ -79,26 +80,6 @@ def reshape_transform(objs):
 
     return sentiment_timeline
 
-
-def cosine_similarity(x, y):
-    """Computes cosine similarity between 2 vectors.
-
-    Parameters
-    ----------
-    x : iterable of numeric values
-    y : iterable of numeric values
-
-    Returns
-    -------
-    float
-        The value of the cosine between 2 vectors.
-    """
-    square_rooted = lambda x: sqrt(sum(a * a for a in x))
-    numerator = sum(a * b for a, b in zip(x, y))
-    denominator = square_rooted(x) * square_rooted(y)
-
-    return numerator / (denominator or 1e-5)
-
 def get_max_len(timelines):
     """Find the bigest index of sentiment timelines.
 
@@ -159,15 +140,48 @@ def fill(sentiment_range, length):
     return new_range
 
 def fill_obj(obj, length):
+    """Applies `fill` to all values of a given object"""
     for key in obj.keys():
         obj[key] = fill(obj[key], length)
 
     return obj
 
+def cosine_similarity(x, y):
+    """Computes cosine similarity between 2 vectors.
+
+    Parameters
+    ----------
+    x : iterable of numeric values
+    y : iterable of numeric values
+
+    Returns
+    -------
+    float
+        The value of the cosine between 2 vectors.
+    """
+    square_rooted = lambda x: sqrt(sum(a * a for a in x))
+    numerator = sum(a * b for a, b in zip(x, y))
+    denominator = square_rooted(x) * square_rooted(y)
+
+    return numerator / (denominator or 1e-5)
+
+def chunk_sum(vector):
+    """It is safe given that the len(vector) >= 100."""
+
+    def _chunks(vector):
+        size, counter = len(vector), 0
+        chunk_size = int(size / 100)
+        while counter < size:
+            yield vector[counter : counter + chunk_size]
+            counter += chunk_size
+
+    return [sum(piece) for piece in _chunks(vector)]
+
 def similarity(base, vector):
+    """Returns the cosine similarity over all fields of 2 dict objects"""
     ret_obj = {}
     for key in base.keys():
-        ret_obj[key] = cosine_similarity(base[key], vector[key])
+        ret_obj[key] = cosine_similarity(chunk_sum(base[key]), chunk_sum(vector[key]))
 
     return ret_obj
 
@@ -179,6 +193,8 @@ def get_top_candidates(raw_base, raw_fetched_objs, top_n=5):
     get_timeline = compose(reshape_transform, lambda o: o["sentiment"]["timeline"])
 
     base_sentiment = get_timeline(raw_base)
+    # print(base_sentiment) # its a fuckin dict of sentiment timelines
+
     fetched_objs_sentiment = list(map(get_timeline, raw_fetched_objs))
 
     max_len = get_max_len([base_sentiment, *fetched_objs_sentiment]) + 1
@@ -197,7 +213,7 @@ def _main():
 
     top_15 = get_top_candidates(base, candidates, top_n=15)
 
-    # print(top_15)
+    print(top_15)
 
 if __name__ == '__main__':
     _main()

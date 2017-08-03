@@ -72,6 +72,8 @@ def _preprocess_filter(key, obj, default_dict):
 
 
 def make_query(obj):
+    """Given a JSON-object with selected filters,
+    returns a MongoDB-style query dict"""
     characters_dict = {
         "aliens": 0,
         "mutants": 0,
