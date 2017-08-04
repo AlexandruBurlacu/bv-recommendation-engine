@@ -9,7 +9,6 @@ database and for mesuring similarity between books.
 
 from math import sqrt
 import json
-
 from utils import get_config, db_fetch, compose
 
 def _reshape_timeline(checkpoints):
@@ -24,7 +23,7 @@ def preprocess_resp(raw_resp):
     condition = len(resp)
     if condition == 1:
         timeline = _reshape_timeline(resp[0]["sentiment"]["timeline"])
-        resp["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
+        resp[0]["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
     elif condition > 1:
         timelines = [_reshape_timeline(r["sentiment"]["timeline"]) for r in resp]
         [r["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
