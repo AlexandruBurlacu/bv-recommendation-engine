@@ -8,7 +8,6 @@ database and for mesuring similarity between books.
 # Email:  alexandru-varacuta@bookvoyager.org
 
 from math import sqrt
-from itertools import islice
 import json
 
 from utils import get_config, db_fetch, compose
@@ -28,9 +27,8 @@ def preprocess_resp(raw_resp):
         resp["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
     elif condition > 1:
         timelines = [_reshape_timeline(r["sentiment"]["timeline"]) for r in resp]
-        [r["sentiment"].update({"timeline": list(timeline)}) for r, timeline in zip(resp, timelines)]
-        # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [WARNING] change in-place
-
+        [r["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
+         for r, timeline in zip(resp, timelines)]
     return json.dumps(resp), {"Content-Type": "application/json"}
 
 def reshape_transform(objs):
@@ -146,7 +144,7 @@ def fill_obj(obj, length):
 
     return obj
 
-def cosine_similarity(x, y):
+def cosine_similarity(x_vector, y_vector):
     """Computes cosine similarity between 2 vectors.
 
     Parameters
@@ -160,8 +158,8 @@ def cosine_similarity(x, y):
         The value of the cosine between 2 vectors.
     """
     square_rooted = lambda x: sqrt(sum(a * a for a in x))
-    numerator = sum(a * b for a, b in zip(x, y))
-    denominator = square_rooted(x) * square_rooted(y)
+    numerator = sum(a * b for a, b in zip(x_vector, y_vector))
+    denominator = square_rooted(x_vector) * square_rooted(y_vector)
 
     return numerator / (denominator or 1e-5)
 
@@ -189,12 +187,38 @@ def compute_score(similar_books):
     for book in similar_books:
         yield sum(book.values())
 
-def get_top_candidates(raw_base, raw_fetched_objs, top_n=5):
+def reshape_output(func):
+    """Reshapes the output of the function `func`.
+
+    Parameters
+    ----------
+    func : binary function
+    base : dict
+    matches : list of dict
+
+    Returns
+    -------
+    {base_name : [{candidate_name : score}]}
+        where base_name, candidate_name is str and score is float
+    """
+    get_title = lambda o: o["metadata"]["title"]
+    def __inner(base, matches, *args, **kwargs):
+        base_name = get_title(base)
+
+        scores = func(base, matches, *args, **kwargs)
+
+        return {
+            base_name : [{title: score} for score, title in
+                         zip(scores, map(get_title, matches))]
+        }
+
+    return __inner
+
+@reshape_output
+def get_candidates(raw_base, raw_fetched_objs):
     get_timeline = compose(reshape_transform, lambda o: o["sentiment"]["timeline"])
 
     base_sentiment = get_timeline(raw_base)
-    # print(base_sentiment) # its a fuckin dict of sentiment timelines
-
     fetched_objs_sentiment = list(map(get_timeline, raw_fetched_objs))
 
     max_len = get_max_len([base_sentiment, *fetched_objs_sentiment]) + 1
@@ -202,18 +226,16 @@ def get_top_candidates(raw_base, raw_fetched_objs, top_n=5):
     base = fill_obj(base_sentiment, max_len)
     fetched_objs = [fill_obj(o, max_len) for o in fetched_objs_sentiment]
 
-    scores = list(similarity(base, obj) for obj in fetched_objs)
-
-    return sorted(compute_score(scores), reverse=True)[:top_n]
+    return compute_score(similarity(base, obj) for obj in fetched_objs)
 
 def _main():
     config = get_config()
     data = json.loads(db_fetch(config["mongo_rest_interface_addr"], {}))["resp"]
     base, candidates = data[0], data[1:]
 
-    top_15 = get_top_candidates(base, candidates, top_n=15)
+    candidates_t = get_candidates(base, candidates)
 
-    print(top_15)
+    print(json.dumps(candidates_t))
 
 if __name__ == '__main__':
     _main()

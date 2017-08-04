@@ -9,7 +9,7 @@ POST /api/v1/books/<book_id>/recommendations to get book recommendations for a b
 import json
 from flask import Flask, request
 
-from logic import get_top_candidates, preprocess_resp
+from logic import get_candidates, preprocess_resp
 from utils import (get_book_by_id, search_by_auth_or_title,
                    get_config, db_fetch, make_query)
 
@@ -37,7 +37,7 @@ def recommend(book_id):
     query = make_query(filters)
     matches = json.loads(db_fetch(addr, query))["resp"]
 
-    return json.dumps(get_top_candidates(base, matches))
+    return json.dumps(get_candidates(base, matches))
 
 
 if __name__ == "__main__":
