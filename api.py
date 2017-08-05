@@ -11,7 +11,7 @@ from flask import Flask, request
 
 from logic import get_candidates, preprocess_resp
 from utils import (get_book_by_id, search_by_auth_or_title,
-                   get_config, db_fetch, make_query)
+                   get_config, db_fetch, make_query, get_sorted)
 
 app = Flask(__name__)
 addr = get_config()["mongo_rest_interface_addr"]
@@ -37,7 +37,10 @@ def recommend(book_id):
     query = make_query(filters)
     matches = json.loads(db_fetch(addr, query))["resp"]
 
-    return json.dumps(get_candidates(base, matches))
+    scores = get_candidates(base, matches)
+    base_title = base["metadata"]["title"]
+
+    return json.dumps(get_sorted(base_title, scores))
 
 
 if __name__ == "__main__":

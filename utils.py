@@ -65,40 +65,56 @@ def search_by_auth_or_title(addr, search_token):
 
 def _preprocess_filter(key, obj, default_dict):
     values = map(lambda v: v.lower().replace("_", ""), obj["filters"][key])
-    [default_dict.update({val: 1}) for val in values] # [WARNING] change in-place
+    [default_dict.update({"genre.{0}.labels.{1}".format(key, val): 1}) for val in values] # [WARNING] change in-place
 
     return default_dict
-
-
 
 def make_query(obj):
     """Given a JSON-object with selected filters,
     returns a MongoDB-style query dict"""
     characters_dict = {
-        "aliens": 0,
-        "mutants": 0,
-        "robots": 0,
-        "humanoiddroids": 0,
-        "dragons": 0,
-        "superintelligence": 0
+        "genre.characters.labels.aliens": {"$in": [0, 1]},
+        "genre.characters.labels.mutants": {"$in": [0, 1]},
+        "genre.characters.labels.robots": {"$in": [0, 1]},
+        "genre.characters.labels.humanoiddroids": {"$in": [0, 1]},
+        "genre.characters.labels.dragons": {"$in": [0, 1]},
+        "genre.characters.labels.superintelligence": {"$in": [0, 1]}
     }
 
     space_dict = {
-        "insideearth": 0,
-        "otherplanets": 0,
-        "outerspace": 0,
-        "beyondsolarsystem": 0
+        "genre.spaceSetting.labels.insideearth": {"$in": [0, 1]},
+        "genre.spaceSetting.labels.otherplanets": {"$in": [0, 1]},
+        "genre.spaceSetting.labels.outerspace": {"$in": [0, 1]},
+        "genre.spaceSetting.labels.beyondsolarsystem": {"$in": [0, 1]}
 
     }
 
     characters = _preprocess_filter("characters", obj, characters_dict)
     space = _preprocess_filter("spaceSetting", obj, space_dict)
     # time_raw = obj["filters"]["timeSetting"] # TODO: add time settings later
-
     author = obj["filters"]["metadata"]["author"]["value"].lower()
 
     return {
-        "metadata.author": author,
-        "genre.characters.labels": characters,
-        "genre.space.labels": space
+        "metadata.author": {"$regex": r"({})\w*".format(author),
+                            "$options": "i"},
+        **characters, **space
         }
+
+def key_function(obj):
+    """Defines a key for `obj` to make it sortable.
+
+    Parameters
+    ----------
+    obj : {str: float}
+        An element of the returning object of the function `get_candidates`.
+
+    Returns
+    -------
+    float
+        The score of a given object/dict
+    """
+    return list(obj.values())[0]
+
+def get_sorted(base_title, scores, top_n=5):
+    return {base_title: list(sorted(scores[base_title],
+                                    key=key_function, reverse=True))[:top_n]}

@@ -198,7 +198,7 @@ def reshape_output(func):
     Returns
     -------
     {base_name : [{candidate_name : score}]}
-        where base_name, candidate_name is str and score is float
+        base_name, candidate_name is str and score is float
     """
     get_title = lambda o: o["metadata"]["title"]
     def __inner(base, matches, *args, **kwargs):
