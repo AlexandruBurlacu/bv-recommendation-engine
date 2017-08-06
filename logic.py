@@ -15,9 +15,37 @@ def _reshape_timeline(checkpoints):
     return map(lambda x: x, checkpoints)
 
 def preprocess_resp(raw_resp):
-    """Applies transformations over the response body
+    """Transforma the sentiment timeline dict of the response body.
 
-    It becomes ugly as hell, sorry.
+    It's ugly as hell, sorry.
+
+    Parameters
+    ----------
+    raw_resp : dict of {"resp": [dict]}
+        The response dictionary fetched, and optionaly preprocessed, from database.
+
+    Returns
+    -------
+    resp : list
+        List with dictionaries with modified structure of the value under
+        the `timeline` key of the `sentiment` dictionary
+    dict
+        {"Content-Type": "application/json"}
+
+    Example
+    -------
+    >>> obj =  \"""{"resp":
+    ...    [{"sentiment":
+    ...       {"timeline":
+    ...            [
+    ...                [1, "joy", "hope", 1936],
+    ...                [1, "joy", "hope", 3597]
+    ...           ]}
+    ...    }]}\"""
+    >>> preprocess_resp(obj)[0]
+    '[{"sentiment": {"timeline": [[1, "joy", "hope", 1936], [1, "joy", "hope", 3597]]}}]'
+    >>> preprocess_resp(obj)[1]
+    {'Content-Type': 'application/json'}
     """
     resp = json.loads(raw_resp)["resp"]
     condition = len(resp)
@@ -163,7 +191,24 @@ def cosine_similarity(x_vector, y_vector):
     return numerator / (denominator or 1e-5)
 
 def chunk_sum(vector):
-    """It is safe given that the len(vector) >= 100."""
+    """It is safe given that the len(vector) >= 100.
+
+    Parameters
+    ----------
+    vector : iterable of Numbers
+
+    Returns
+    -------
+    list of Numbers
+
+    Example
+    -------
+    >>> x = range(1000)
+    >>> chunk_sum(x) == [x * 100 + 45 for x in range(100)]
+    True
+    >>> chunk_sum(range(100)) == list(range(100))
+    True
+    """
 
     def _chunks(vector):
         size, counter = len(vector), 0
@@ -183,6 +228,8 @@ def similarity(base, vector):
     return ret_obj
 
 def compute_score(similar_books):
+    """Yields the sum of matched books' cosine similarity
+    values over 6 basic sentiments"""
     for book in similar_books:
         yield sum(book.values())
 
@@ -215,6 +262,20 @@ def reshape_output(func):
 
 @reshape_output
 def get_candidates(raw_base, raw_fetched_objs):
+    """
+
+    Parameters
+    ----------
+    raw_base : dict
+        Base book
+    raw_fetched_objs : [dict]
+        Matching books
+
+    Returns
+    -------
+    [float]
+        The similarity scores of books compared to the base book.
+    """
     get_timeline = compose(reshape_transform, lambda o: o["sentiment"]["timeline"])
 
     base_sentiment = get_timeline(raw_base)

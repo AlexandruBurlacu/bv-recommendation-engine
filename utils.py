@@ -65,7 +65,9 @@ def search_by_auth_or_title(addr, search_token):
 
 def _preprocess_filter(key, obj, default_dict):
     values = map(lambda v: v.lower().replace("_", ""), obj["filters"][key])
-    [default_dict.update({"genre.{0}.labels.{1}".format(key, val): 1}) for val in values] # [WARNING] change in-place
+    [default_dict.update({"genre.{0}.labels.{1}".format(key, val): 1}) for val in values]
+    #       ^^^^^^^^^^^^^
+    # [WARNING] change in-place
 
     return default_dict
 
@@ -116,5 +118,6 @@ def key_function(obj):
     return list(obj.values())[0]
 
 def get_sorted(base_title, scores, top_n=5):
+    """Sorts the respond body and shapes it before sending over the network"""
     return {base_title: list(sorted(scores[base_title],
                                     key=key_function, reverse=True))[:top_n]}
