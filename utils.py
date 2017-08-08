@@ -64,7 +64,8 @@ def search_by_auth_or_title(addr, search_token):
                                                         "$options": "i"}}]})
 
 def _preprocess_filter(key, obj, default_dict):
-    values = map(lambda v: v.lower().replace("_", ""), obj["filters"][key])
+    # values = map(lambda v: v.lower().replace("_", ""), obj["filters"][key])
+    values = obj[key]
     [default_dict.update({"genre.{0}.labels.{1}".format(key, val): 1}) for val in values]
     #       ^^^^^^^^^^^^^
     # [WARNING] change in-place
@@ -94,7 +95,7 @@ def make_query(obj):
     characters = _preprocess_filter("characters", obj, characters_dict)
     space = _preprocess_filter("spaceSetting", obj, space_dict)
     # time_raw = obj["filters"]["timeSetting"] # TODO: add time settings later
-    author = obj["filters"]["metadata"]["author"]["value"].lower()
+    author = obj["metadata"]["author"]["value"].lower()
 
     return {
         "metadata.author": {"$regex": r"({})\w*".format(author),

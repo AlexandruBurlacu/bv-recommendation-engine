@@ -32,12 +32,20 @@ def list_all_books():
 @app.route("/api/v1/books/<book_id>/recommendations", methods=["POST"])
 def recommend(book_id):
     """Returns 5 most similar books to the one which's `id` was passed as URL argument"""
-    filters = request.get_json()
+    filters = json.loads(request.get_json())
     base = json.loads(get_book_by_id(addr, book_id))["resp"][0]
     query = make_query(filters)
+
+    app.logger.error(filters)
+
     matches = json.loads(db_fetch(addr, query))["resp"]
 
+    app.logger.error(matches)
+
     scores = get_candidates(base, matches)
+
+    app.logger.error(scores)
+
     base_title = base["metadata"]["title"]
 
     return json.dumps(get_sorted(base_title, scores))
