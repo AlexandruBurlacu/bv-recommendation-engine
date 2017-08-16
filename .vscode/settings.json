@@ -21,9 +21,12 @@
     "python.linting.pylintEnabled": true,
     "python.linting.lintOnSave": true,
     "python.linting.pylintPath": ".venv/bin/pylint",
-    "python.unitTest.unittestEnabled": true,
+    "python.unitTest.unittestEnabled": false,
     "python.autoComplete.preloadModules": [
         "flask"
     ],
-    "editor.multiCursorModifier": "alt"
+    "editor.multiCursorModifier": "alt",
+    "python.unitTest.promptToConfigure": false,
+    "python.unitTest.pyTestEnabled": false,
+    "python.unitTest.nosetestsEnabled": false
 }

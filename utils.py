@@ -95,13 +95,15 @@ def make_query(obj):
     characters = _preprocess_filter("characters", obj, characters_dict)
     space = _preprocess_filter("spaceSetting", obj, space_dict)
     # time_raw = obj["filters"]["timeSetting"] # TODO: add time settings later
-    author = obj["metadata"]["author"]["value"].lower()
+    author = obj["metadata"]["author"]["value"]
 
     return {
-        "metadata.author": {"$regex": r"({})\w*".format(author),
-                            "$options": "i"},
-        **characters, **space
-        }
+        "$or": [
+            {"metadata.author": {"$regex": r"({})\w*".format(author.lower() if author else ""),
+                                 "$options": "i"}},
+            {**characters}, {**space}
+        ]
+    }
 
 def key_function(obj):
     """Defines a key for `obj` to make it sortable.
