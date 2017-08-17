@@ -167,7 +167,7 @@ def fill(sentiment_range, length):
 def fill_obj(obj, length):
     """Applies `fill` to all values of a given object"""
     for key in obj.keys():
-        obj[key] = fill(obj[key], length)
+        obj[key] = chunk_sum(fill(obj[key], length))
 
     return obj
 
@@ -223,7 +223,7 @@ def similarity(base, vector):
     """Returns the cosine similarity over all fields of 2 dict objects"""
     ret_obj = {}
     for key in base.keys():
-        ret_obj[key] = cosine_similarity(chunk_sum(base[key]), chunk_sum(vector[key]))
+        ret_obj[key] = cosine_similarity(base[key], vector[key])
 
     return ret_obj
 
@@ -284,7 +284,7 @@ def get_candidates(raw_base, raw_fetched_objs):
     max_len = get_max_len([base_sentiment, *fetched_objs_sentiment]) + 1
 
     base = fill_obj(base_sentiment, max_len)
-    fetched_objs = [fill_obj(o, max_len) for o in fetched_objs_sentiment]
+    fetched_objs = (fill_obj(o, max_len) for o in fetched_objs_sentiment)
 
     return compute_score(similarity(base, obj) for obj in fetched_objs)
 
