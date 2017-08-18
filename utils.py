@@ -64,7 +64,6 @@ def search_by_auth_or_title(addr, search_token):
                                                         "$options": "i"}}]})
 
 def _preprocess_filter(key, obj, default_dict):
-    # values = map(lambda v: v.lower().replace("_", ""), obj["filters"][key])
     values = obj[key]
     [default_dict.update({"genre.{0}.labels.{1}".format(key, val): 1}) for val in values]
     #       ^^^^^^^^^^^^^

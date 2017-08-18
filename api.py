@@ -48,7 +48,6 @@ def list_all_books():
     response = preprocess_resp(search_by_auth_or_title(addr, search_query))
 
     app.logger.info("Output: 200 OK") # [LOGGING]
-
     return response
 
 @app.route("/api/v1/books/<book_id>/recommendations", methods=["POST"])
@@ -63,15 +62,12 @@ def recommend(book_id):
     query = make_query(filters)
 
     matches = json.loads(db_fetch(addr, query))["resp"]
-
     scores = get_candidates(base, matches)
 
     base_title = base["metadata"]["title"]
-
     response = json.dumps(get_sorted(base_title, scores))
 
     app.logger.info("Output: 200 OK") # [LOGGING]
-
     return response
 
 

@@ -9,7 +9,7 @@ database and for mesuring similarity between books.
 
 from math import sqrt
 import json
-from utils import get_config, db_fetch, compose
+from utils import compose
 
 def _reshape_timeline(checkpoints):
     return map(lambda x: x, checkpoints)
@@ -282,20 +282,8 @@ def get_candidates(raw_base, raw_fetched_objs):
     fetched_objs_sentiment = list(map(get_timeline, raw_fetched_objs))
 
     max_len = get_max_len([base_sentiment, *fetched_objs_sentiment]) + 1
-
     base = fill_obj(base_sentiment, max_len)
     fetched_objs = (fill_obj(o, max_len) for o in fetched_objs_sentiment)
 
     return compute_score(similarity(base, obj) for obj in fetched_objs)
 
-def _main():
-    config = get_config()
-    data = json.loads(db_fetch(config["mongo_rest_interface_addr"], {}))["resp"]
-    base, candidates = data[0], data[1:]
-
-    candidates_t = get_candidates(base, candidates)
-
-    print(json.dumps(candidates_t))
-
-if __name__ == '__main__':
-    _main()
