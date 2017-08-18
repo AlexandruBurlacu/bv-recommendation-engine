@@ -16,23 +16,29 @@ from utils import (get_book_by_id, search_by_auth_or_title,
 app = Flask(__name__)
 addr = get_config()["mongo_rest_interface_addr"]
 
+
 @app.route("/api/v1/books/<book_id>", methods=["GET"])
 def get_book(book_id):
     """Get specific book by it's ID"""
 
-    return preprocess_resp(get_book_by_id(addr, book_id))
+    response = preprocess_resp(get_book_by_id(addr, book_id))
+
+    return response
 
 @app.route("/api/v1/books", methods=["GET"])
 def list_all_books():
     """Return all books with matching names for `author` or `title`"""
     search_query = request.args.get("q", "")
 
-    return preprocess_resp(search_by_auth_or_title(addr, search_query))
+    response = preprocess_resp(search_by_auth_or_title(addr, search_query))
+
+    return response
 
 @app.route("/api/v1/books/<book_id>/recommendations", methods=["POST"])
 def recommend(book_id):
     """Returns 5 most similar books to the one which's `id` was passed as URL argument"""
     filters = request.get_json()["filters"]
+
     base = json.loads(get_book_by_id(addr, book_id))["resp"][0]
     query = make_query(filters)
 
@@ -42,7 +48,9 @@ def recommend(book_id):
 
     base_title = base["metadata"]["title"]
 
-    return json.dumps(get_sorted(base_title, scores))
+    response = json.dumps(get_sorted(base_title, scores))
+
+    return response
 
 
 if __name__ == "__main__":
