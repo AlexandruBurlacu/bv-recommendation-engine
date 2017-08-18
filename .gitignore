@@ -1,6 +1,7 @@
 __pycache__
 temp_*
 *.log
+logs
 .venv
 *_reports
 project_info
