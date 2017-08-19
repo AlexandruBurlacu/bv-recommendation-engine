@@ -119,5 +119,5 @@ def key_function(obj):
 
 def get_sorted(base_title, scores, top_n=5):
     """Sorts the respond body and shapes it before sending over the network"""
-    return {base_title: list(sorted(scores[base_title],
-                                    key=key_function, reverse=True))[:top_n]}
+    return {"resp": list(sorted(scores[base_title],
+                                key=lambda x: x["score"], reverse=True))[1:top_n + 1]}
