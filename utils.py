@@ -64,11 +64,10 @@ def search_by_auth_or_title(addr, search_token):
                                                         "$options": "i"}}]})
 
 def _preprocess_filter(key, obj, default_dict):
-    values = obj[key]
-    [default_dict.update({"genre.{0}.labels.{1}".format(key, val): 1}) for val in values]
+    kv_pairs = obj[key].items()
+    [default_dict.update({"genre.{0}.labels.{1}".format(key, k): v}) for k, v in kv_pairs if v == 1]
     #       ^^^^^^^^^^^^^
     # [WARNING] change in-place
-
     return default_dict
 
 def make_query(obj):
@@ -88,7 +87,6 @@ def make_query(obj):
         "genre.spaceSetting.labels.otherplanets": {"$in": [0, 1]},
         "genre.spaceSetting.labels.outerspace": {"$in": [0, 1]},
         "genre.spaceSetting.labels.beyondsolarsystem": {"$in": [0, 1]}
-
     }
 
     characters = _preprocess_filter("characters", obj, characters_dict)

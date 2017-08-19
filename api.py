@@ -53,7 +53,7 @@ def list_all_books():
 @app.route("/api/v1/books/<book_id>/recommendations", methods=["POST"])
 def recommend(book_id):
     """Returns 5 most similar books to the one which's `id` was passed as URL argument"""
-    filters = request.get_json()["filters"]
+    filters = request.get_json()
 
     app.logger.info("Input: {}".format(filters)) # [LOGGING]
     app.logger.info("Headers: {}".format(list(request.headers))) # [LOGGING]
