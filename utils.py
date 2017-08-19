@@ -102,22 +102,68 @@ def make_query(obj):
         ]
     }
 
-def key_function(obj):
-    """Defines a key for `obj` to make it sortable.
+def get_full_objs_decorator(func):
+    """Adds the full object about given title. Fetches it from DB."""
+    def __inner(base_title, scores, *args, **kwargs):
+        addr = get_config()["mongo_rest_interface_addr"]
+        get_obj = lambda t: json.loads(preprocess_resp(search_by_auth_or_title(addr, t)))
 
-    Parameters
-    ----------
-    obj : {str: float}
-        An element of the returning object of the function `get_candidates`.
+        resp = func(base_title, scores, *args, **kwargs)
 
-    Returns
-    -------
-    float
-        The score of a given object/dict
-    """
-    return list(obj.values())[0]
+        for kvs in resp["resp"]:
+            kvs["title"] = get_obj(kvs["title"])
 
+        return resp
+    return __inner
+
+@get_full_objs_decorator
 def get_sorted(base_title, scores, top_n=5):
     """Sorts the respond body and shapes it before sending over the network"""
     return {"resp": list(sorted(scores[base_title],
                                 key=lambda x: x["score"], reverse=True))[1:top_n + 1]}
+
+
+def _reshape_timeline(checkpoints):
+    return map(lambda x: x, checkpoints)
+
+def preprocess_resp(raw_resp):
+    """Transforma the sentiment timeline dict of the response body.
+
+    It's ugly as hell, sorry.
+
+    Parameters
+    ----------
+    raw_resp : dict of {"resp": [dict]}
+        The response dictionary fetched, and optionaly preprocessed, from database.
+
+    Returns
+    -------
+    resp : list
+        List with dictionaries with modified structure of the value under
+        the `timeline` key of the `sentiment` dictionary
+    dict
+        {"Content-Type": "application/json"}
+
+    Example
+    -------
+    >>> obj =  \"""{"resp":
+    ...    [{"sentiment":
+    ...       {"timeline":
+    ...            [
+    ...                [1, "joy", "hope", 1936],
+    ...                [1, "joy", "hope", 3597]
+    ...           ]}
+    ...    }]}\"""
+    >>> preprocess_resp(obj)
+    '[{"sentiment": {"timeline": [[1, "joy", "hope", 1936], [1, "joy", "hope", 3597]]}}]'
+    """
+    resp = json.loads(raw_resp)["resp"]
+    condition = len(resp)
+    if condition == 1:
+        timeline = _reshape_timeline(resp[0]["sentiment"]["timeline"])
+        resp[0]["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
+    elif condition > 1:
+        timelines = [_reshape_timeline(r["sentiment"]["timeline"]) for r in resp]
+        [r["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
+         for r, timeline in zip(resp, timelines)]
+    return json.dumps(resp)

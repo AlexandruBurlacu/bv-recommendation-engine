@@ -11,8 +11,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask, request
 
-from logic import get_candidates, preprocess_resp
-from utils import (get_book_by_id, search_by_auth_or_title,
+from logic import get_candidates
+from utils import (get_book_by_id, search_by_auth_or_title, preprocess_resp,
                    get_config, db_fetch, make_query, get_sorted)
 
 app = Flask(__name__)
@@ -35,7 +35,7 @@ def get_book(book_id):
     response = preprocess_resp(get_book_by_id(addr, book_id))
 
     app.logger.info("Output: 200 OK") # [LOGGING]
-    return response
+    return response, {"Content-Type": "application/json"}
 
 @app.route("/api/v1/books", methods=["GET"])
 def list_all_books():
@@ -48,7 +48,7 @@ def list_all_books():
     response = preprocess_resp(search_by_auth_or_title(addr, search_query))
 
     app.logger.info("Output: 200 OK") # [LOGGING]
-    return response
+    return response, {"Content-Type": "application/json"}
 
 @app.route("/api/v1/books/<book_id>/recommendations", methods=["POST"])
 def recommend(book_id):
@@ -68,7 +68,7 @@ def recommend(book_id):
     response = json.dumps(get_sorted(base_title, scores))
 
     app.logger.info("Output: 200 OK") # [LOGGING]
-    return response
+    return response, {"Content-Type": "application/json"}
 
 
 if __name__ == "__main__":

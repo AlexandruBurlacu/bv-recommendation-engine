@@ -8,55 +8,8 @@ database and for mesuring similarity between books.
 # Email:  alexandru-varacuta@bookvoyager.org
 
 from math import sqrt
-import json
-from utils import compose, search_by_auth_or_title, get_config
+from utils import compose
 
-def _reshape_timeline(checkpoints):
-    return map(lambda x: x, checkpoints)
-
-def preprocess_resp(raw_resp):
-    """Transforma the sentiment timeline dict of the response body.
-
-    It's ugly as hell, sorry.
-
-    Parameters
-    ----------
-    raw_resp : dict of {"resp": [dict]}
-        The response dictionary fetched, and optionaly preprocessed, from database.
-
-    Returns
-    -------
-    resp : list
-        List with dictionaries with modified structure of the value under
-        the `timeline` key of the `sentiment` dictionary
-    dict
-        {"Content-Type": "application/json"}
-
-    Example
-    -------
-    >>> obj =  \"""{"resp":
-    ...    [{"sentiment":
-    ...       {"timeline":
-    ...            [
-    ...                [1, "joy", "hope", 1936],
-    ...                [1, "joy", "hope", 3597]
-    ...           ]}
-    ...    }]}\"""
-    >>> preprocess_resp(obj)[0]
-    '[{"sentiment": {"timeline": [[1, "joy", "hope", 1936], [1, "joy", "hope", 3597]]}}]'
-    >>> preprocess_resp(obj)[1]
-    {'Content-Type': 'application/json'}
-    """
-    resp = json.loads(raw_resp)["resp"]
-    condition = len(resp)
-    if condition == 1:
-        timeline = _reshape_timeline(resp[0]["sentiment"]["timeline"])
-        resp[0]["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
-    elif condition > 1:
-        timelines = [_reshape_timeline(r["sentiment"]["timeline"]) for r in resp]
-        [r["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
-         for r, timeline in zip(resp, timelines)]
-    return json.dumps(resp), {"Content-Type": "application/json"}
 
 def reshape_transform(objs):
     """Reshapes an iterable of 4-tuple to a dict of lists
@@ -252,13 +205,10 @@ def reshape_output(func):
         base_name = get_title(base)
 
         scores = func(base, matches, *args, **kwargs)
-        addr = get_config()["mongo_rest_interface_addr"]
 
         return {
             base_name: [{"score": score,
-                         "title": json.loads(preprocess_resp(
-                             search_by_auth_or_title(addr, title)
-                         )[0])} for score, title in
+                         "title": title} for score, title in
                         zip(scores, map(get_title, matches))]
         }
 
