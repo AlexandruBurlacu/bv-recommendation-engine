@@ -109,9 +109,16 @@ def get_full_objs_decorator(func):
         get_obj = lambda t: json.loads(preprocess_resp(search_by_auth_or_title(addr, t)))
 
         resp = func(base_title, scores, *args, **kwargs)
+        head_obj, *tail_objs = resp["resp"]
 
-        for kvs in resp["resp"]:
-            kvs["title"] = get_obj(kvs["title"])
+        base_obj = get_obj(head_obj["title"])[0]
+
+        for kvs in tail_objs:
+            kvs["title"] = get_obj(kvs["title"])[0]
+            kvs["title"]["sentiment"]["overall"] = kvs["title"]["sentiment"]["overall"][0]
+
+            kvs["title"]["sentiment"]["overall"] = {"current": kvs["title"]["sentiment"]["overall"],
+                                                    "base": base_obj["sentiment"]["overall"]}
 
         return resp
     return __inner
@@ -120,7 +127,7 @@ def get_full_objs_decorator(func):
 def get_sorted(base_title, scores, top_n=5):
     """Sorts the respond body and shapes it before sending over the network"""
     return {"resp": list(sorted(scores[base_title],
-                                key=lambda x: x["score"], reverse=True))[1:top_n + 1]}
+                                key=lambda x: x["score"], reverse=True))[:top_n + 1]}
 
 
 def _reshape_timeline(checkpoints):
