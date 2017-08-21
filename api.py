@@ -30,7 +30,6 @@ app.logger.setLevel(logging.INFO)
 def get_book(book_id):
     """Get specific book by it's ID"""
     app.logger.info("Input: {}".format(book_id)) # [LOGGING]
-    app.logger.info("Headers: {}".format(list(request.headers))) # [LOGGING]
 
     response = preprocess_resp(get_book_by_id(addr, book_id))
 
@@ -43,7 +42,6 @@ def list_all_books():
     search_query = request.args.get("q", "")
 
     app.logger.info("Input: {}".format(search_query)) # [LOGGING]
-    app.logger.info("Headers: {}".format(list(request.headers))) # [LOGGING]
 
     response = preprocess_resp(search_by_auth_or_title(addr, search_query))
 
@@ -56,7 +54,6 @@ def recommend(book_id):
     filters = request.get_json()
 
     app.logger.info("Input: {}".format(filters)) # [LOGGING]
-    app.logger.info("Headers: {}".format(list(request.headers))) # [LOGGING]
 
     base = json.loads(get_book_by_id(addr, book_id))["resp"][0]
     query = make_query(filters)
