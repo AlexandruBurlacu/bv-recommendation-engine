@@ -1,4 +1,4 @@
-"""utils module
+"""Utility functions module
 
 This module provides utility functions.
 """
