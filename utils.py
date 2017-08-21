@@ -133,7 +133,7 @@ def get_full_objs_decorator(func):
             kvs["title"]["sentiment"]["overall"] = {"current": get_overall_sentiment(kvs["title"]),
                                                     "base": get_overall_sentiment(base_obj)}
         _, *top_matches = resp["resp"]
-        return {"resp": top_matches}
+        return top_matches
     return __inner
 
 @get_full_objs_decorator
