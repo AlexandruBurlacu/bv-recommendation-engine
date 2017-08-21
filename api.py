@@ -12,17 +12,16 @@ from logging.handlers import RotatingFileHandler
 from flask import Flask, request
 
 from logic import get_candidates
-from utils import (get_book_by, preprocess_resp,
-                   get_config, db_fetch, make_query, get_sorted)
+from utils import (get_book_by, get_config, get_sorted,
+                   db_fetch, make_query, preprocess_resp)
 
 app = Flask(__name__)
 
 addr = get_config()["mongo_rest_interface_addr"]
 
-handler = RotatingFileHandler('logs/info.log', maxBytes=10000000, backupCount=1)
+handler = RotatingFileHandler(get_config()["log_file"], maxBytes=10000000, backupCount=1)
 handler.setLevel(logging.INFO)
-handler.setFormatter(logging.Formatter(
-    "[%(asctime)s] {%(funcName)s in %(pathname)s:%(lineno)d} %(levelname)s - %(message)s"))
+handler.setFormatter(logging.Formatter(get_config()["log_format"]))
 app.logger.addHandler(handler)
 app.logger.setLevel(logging.INFO)
 
