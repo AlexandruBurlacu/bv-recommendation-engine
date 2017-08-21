@@ -104,23 +104,23 @@ def make_query(obj):
 
 def get_full_objs_decorator(func):
     """Adds the full object about given title. Fetches it from DB."""
-    def __inner(base_title, scores, *args, **kwargs):
-        addr = get_config()["mongo_rest_interface_addr"]
-        get_obj = lambda t: json.loads(preprocess_resp(search_by_auth_or_title(addr, t)))
+    addr = get_config()["mongo_rest_interface_addr"]
+    get_obj = lambda t: json.loads(preprocess_resp(search_by_auth_or_title(addr, t)))[0]
+    get_overall_sentiment = lambda o: o["sentiment"]["overall"][0]
 
+    def __inner(base_title, scores, *args, **kwargs):
         resp = func(base_title, scores, *args, **kwargs)
         head_obj, *tail_objs = resp["resp"]
 
-        base_obj = get_obj(head_obj["title"])[0]
+        base_obj = get_obj(head_obj["title"])
 
         for kvs in tail_objs:
-            kvs["title"] = get_obj(kvs["title"])[0]
-            kvs["title"]["sentiment"]["overall"] = kvs["title"]["sentiment"]["overall"][0]
+            kvs["title"] = get_obj(kvs["title"])
 
-            kvs["title"]["sentiment"]["overall"] = {"current": kvs["title"]["sentiment"]["overall"],
-                                                    "base": base_obj["sentiment"]["overall"]}
-
-        return resp
+            kvs["title"]["sentiment"]["overall"] = {"current": get_overall_sentiment(kvs["title"]),
+                                                    "base": get_overall_sentiment(base_obj)}
+        _, *top_matches = resp["resp"]
+        return {"resp": top_matches}
     return __inner
 
 @get_full_objs_decorator
