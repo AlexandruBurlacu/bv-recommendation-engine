@@ -51,11 +51,24 @@ def db_fetch(db_service_url, constraints):
                          headers={"content-type": "application/json"})
     return json.loads(resp.content.decode("utf-8"))
 
-def get_book_by_id(addr, book_id):
+def get_book_by(field_name, addr, field_value):
+    """Facade function to make the API for fetching the database more uniform
+    and to reduce the number of imported functions"""
+    if field_name == "id":
+        data = _get_book_by_id(addr, field_value)
+    elif field_name == "author_or_title":
+        data = _search_by_auth_or_title(addr, field_value)
+    else:
+        raise KeyError("Function get_book_by not defined for field_name '{}', \
+available options are {}".format(field_name, ["id", "author_or_title"]))
+
+    return data
+
+def _get_book_by_id(addr, book_id):
     """Get book by MongoDB ID"""
     return db_fetch(addr, {"id": book_id})
 
-def search_by_auth_or_title(addr, search_token):
+def _search_by_auth_or_title(addr, search_token):
     """Given a string, perform a regex search over `author` and `title` fields of a book."""
     token = search_token.lower()
     return db_fetch(addr, {"$or": [{"metadata.author": {"$regex": r"({})\w*".format(token),
@@ -105,7 +118,7 @@ def make_query(obj):
 def get_full_objs_decorator(func):
     """Adds the full object about given title. Fetches it from DB."""
     addr = get_config()["mongo_rest_interface_addr"]
-    get_obj = lambda t: json.loads(preprocess_resp(search_by_auth_or_title(addr, t)))[0]
+    get_obj = lambda t: json.loads(preprocess_resp(get_book_by("author_or_title", addr, t)))[0]
     get_overall_sentiment = lambda o: o["sentiment"]["overall"][0]
 
     def __inner(base_title, scores, *args, **kwargs):
