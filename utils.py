@@ -77,6 +77,10 @@ def _search_by_auth_or_title(addr, search_token):
                                                         "$options": "i"}}]})
 
 def _preprocess_filter(key, obj, default_dict):
+    """If filter object, at the given `key` has value 1,
+    it modifies the `default_dict` else it leaves it untouched.
+    The only inconvenience is that the change is in place.
+    """
     kv_pairs = obj[key].items()
     [default_dict.update({"genre.{0}.labels.{1}".format(key, k): v}) for k, v in kv_pairs if v == 1]
     #       ^^^^^^^^^^^^^
@@ -115,8 +119,16 @@ def make_query(obj):
         ]
     }
 
-def get_full_objs_decorator(func):
-    """Adds the full object about given title. Fetches it from DB."""
+def _get_full_objs_decorator(func):
+    """Adds the full object about given title. Fetches it from DB.
+    Also, the decorator enriches the `sentiment.overall` field of the top matching titles
+    with the base title's `sentiment.overall` list of objects.
+
+    From [{"score": float, "title": str}]
+    To   [{"score": float, "title": obj] where obj is similart
+    to the response from "/api/v1/books/<book_id>" endpoit but with the `sentiment.overall` field
+    now containing 2 keys, `current` and `base`.
+    """
     addr = get_config()["mongo_rest_interface_addr"]
     get_obj = lambda t: json.loads(preprocess_resp(get_book_by("author_or_title", addr, t)))[0]
     get_overall_sentiment = lambda o: o["sentiment"]["overall"][0]
@@ -136,7 +148,7 @@ def get_full_objs_decorator(func):
         return {"resp": top_matches}
     return __inner
 
-@get_full_objs_decorator
+@_get_full_objs_decorator
 def get_sorted(base_title, scores, top_n=5):
     """Sorts the respond body and shapes it before sending over the network"""
     return {"resp": list(sorted(scores[base_title],
