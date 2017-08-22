@@ -11,6 +11,15 @@ from math import sqrt
 from utils import compose
 
 
+def timeit(func):
+    from time import time
+    def __inner(*args, **kwargs):
+        start = time()
+        [func(*args, **kwargs) for _ in range(100)]
+        print(time() - start)
+        return func(*args, **kwargs)
+    return __inner
+
 def reshape_transform(objs):
     """Reshapes an iterable of 4-tuple to a dict of lists
 
@@ -39,9 +48,14 @@ def reshape_transform(objs):
     True
 
     """
-    get_sentiment_cat = lambda x: x[1]
-    get_sentiment_score = lambda x: x[0]
-    get_index = lambda x: x[3]
+
+    get = lambda key, x: x[
+        {
+            "sentiment_score": 0,
+            "sentiment_cat": 1,
+            "index": 3
+        }[key]
+    ]
 
     sentiment_timeline = {
         "sadness": [],
@@ -53,8 +67,8 @@ def reshape_transform(objs):
     }
 
     for obj in objs:
-        data = (get_sentiment_score(obj), get_index(obj))
-        sentiment_timeline[get_sentiment_cat(obj)].append(data)
+        data = (get("sentiment_score", obj), get("index", obj))
+        sentiment_timeline[get("sentiment_cat", obj)].append(data)
 
     return sentiment_timeline
 
@@ -76,18 +90,15 @@ def get_max_len(timelines):
     >>> get_max_len(tmls)
     20
     """
-    max_len = -1
+    max_lens = []
     for timeline in timelines:
-        for key in timeline.keys():
-            try:
-                local_max = max(timeline[key], key=lambda x: x[1])[1]
-                if local_max > max_len:
-                    max_len = local_max
-            except ValueError:
-                continue
+        for val in timeline.values():
+            max_lens += max(val) if val else [-1]
 
-    return max_len
+    return max(max_lens)
 
+from itertools import zip_longest
+# @timeit
 def fill(sentiment_range, length):
     """Fills unindexed entries with 0s
 

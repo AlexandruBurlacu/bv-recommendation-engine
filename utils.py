@@ -110,7 +110,6 @@ def get_sorted(base_title, scores, top_n=5):
     return {"resp": list(sorted(scores[base_title],
                                 key=lambda x: x["score"], reverse=True))[:top_n + 1]}
 
-
 def _reshape_timeline(checkpoints):
     return map(lambda x: x, checkpoints)
 
