@@ -68,51 +68,53 @@ def recommend(book_id):
 
 if __name__ == "__main__":
     # app.run(host="0.0.0.0", port=8000, debug=True)
+
+    # for profiling purposes
     book_id = "8331669957f25b1ae217aadaf2a064a33042933c"
     filters = {
-  "book": 1234,
-  "characters": {
-  	"aliens": 1,
-  	"dragons": 0,
-  	"humanoiddroids": 0,
-  	"mutants": 0,
-  	"robots": 0,
-  	"superintelligence": 0
-  },
-  "spaceSetting": {
-  	"beyondsolarsystem": 0,
-    "insideearth": 0,
-	"otherplanets": 0,
-	"outerspace": 0
-  },
-  "timeSetting": "ALTERNATIVE_TIMELINE",
-  "metadata": {
-    "genre": {
-      "id": 2,
-      "type": "genre",
-      "value": "Science Fiction",
-      "label": "Genre:",
-      "state": 0,
-      "initial": None
-    },
-    "country": {
-      "id": 3,
-      "type": "country",
-      "value": "ANY",
-      "label": "Country:",
-      "state": 2,
-      "initial": None
-    },
-    "author": {
-      "id": 1,
-      "type": "author",
-      "value": "Robert A. Heinlein",
-      "label": "Author:",
-      "state": 1,
-      "initial": None
+        "book": 1234,
+        "characters": {
+            "aliens": 1,
+            "dragons": 0,
+            "humanoiddroids": 0,
+            "mutants": 0,
+            "robots": 0,
+            "superintelligence": 0
+        },
+        "spaceSetting": {
+            "beyondsolarsystem": 0,
+            "insideearth": 0,
+            "otherplanets": 0,
+            "outerspace": 0
+        },
+        "timeSetting": "ALTERNATIVE_TIMELINE",
+        "metadata": {
+            "genre": {
+                "id": 2,
+                "type": "genre",
+                "value": "Science Fiction",
+                "label": "Genre:",
+                "state": 0,
+                "initial": None
+            },
+            "country": {
+                "id": 3,
+                "type": "country",
+                "value": "ANY",
+                "label": "Country:",
+                "state": 2,
+                "initial": None
+            },
+            "author": {
+                "id": 1,
+                "type": "author",
+                "value": "Robert A. Heinlein",
+                "label": "Author:",
+                "state": 1,
+                "initial": None
+            }
+        }
     }
-  }
-}
 
 
     base = json.loads(get_book_by("id", DB_ADDRESS, book_id))["resp"][0]
@@ -121,4 +123,3 @@ if __name__ == "__main__":
     matches = json.loads(db_fetch(DB_ADDRESS, query))["resp"]
     scores = get_candidates(base, matches)
     response = json.dumps(get_sorted(base["metadata"]["title"], scores))
-    print("Done")
