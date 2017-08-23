@@ -83,7 +83,7 @@ def fill(sentiment_range, length, memo={}):
     new_range : list of int
         List of magnitudes of sentiments in chronological order.
     """
-    if not memo.has_key(length):
+    if not (length in memo):
         memo[length] = [0 for _ in range(length)]
 
     new_range = memo[length]
