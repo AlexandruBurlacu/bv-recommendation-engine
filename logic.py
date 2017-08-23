@@ -115,6 +115,19 @@ def cosine_similarity(x_vector, y_vector):
 
     return numerator / (denominator or 1e-5)
 
+def _validate_input_vector(func):
+    def __inner(vector, *args, **kwargs):
+        vector_len = len(vector)
+        if vector_len < 100: # 'vector' should be at least 100 elements long
+            valid_vector = [*vector, *[0 for _ in range(100 - vector_len)]]
+            result = func(valid_vector, *args, **kwargs)
+        else:
+            result = func(vector, *args, **kwargs)
+
+        return result
+    return __inner
+
+@_validate_input_vector
 def chunk_sum(vector):
     """It is safe given that the len(vector) >= 100.
 
@@ -126,7 +139,6 @@ def chunk_sum(vector):
     -------
     list of Numbers
     """
-    assert len(vector) >= 100, "'vector' should be at least 100 elements long"
 
     def _chunks(vector):
         size, counter = len(vector), 0
