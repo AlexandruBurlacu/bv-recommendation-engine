@@ -1,2 +1,2 @@
 #! /bin/sh
-python -m doctest *.py -v
+python -m unittest tests/test_*.py -v

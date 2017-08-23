@@ -66,7 +66,7 @@ def get_max_len(timelines):
 
     return max(max_lens)
 
-def fill(sentiment_range, length):
+def fill(sentiment_range, length, memo={}):
     """Fills unindexed entries with 0s
 
     Parameters
@@ -83,7 +83,10 @@ def fill(sentiment_range, length):
     new_range : list of int
         List of magnitudes of sentiments in chronological order.
     """
-    new_range = [0 for _ in range(length)]
+    if not memo.has_key(length):
+        memo[length] = [0 for _ in range(length)]
+
+    new_range = memo[length]
     for val, i in sentiment_range:
         new_range[i] = val
 
