@@ -8,7 +8,7 @@ database and for mesuring similarity between books.
 # Email:  alexandru-varacuta@bookvoyager.org
 
 from math import sqrt
-from utils import compose
+from .utils import compose
 
 
 def reshape_transform(objs):
@@ -22,26 +22,15 @@ def reshape_transform(objs):
     -------
     sentiment_timeline : dict of str to list of (int, int)
         A dictionary of indexed magnitudes of 6 different basic emotions.
-
-    Example
-    -------
-    >>> data = [(-1, 'fear', "tok", 0),
-    ...         (-1, 'sadness', "tok", 1),
-    ...         (1, 'surprise', "tok", 2),
-    ...         (-1, 'fear', "tok", 3),
-    ...         (1, 'surprise', "tok", 4)]
-    >>> reshape_transform(data) == {'anger': [],
-    ...                             'fear': [(-1, 0), (-1, 3)],
-    ...                             'joy': [],
-    ...                             'love': [],
-    ...                             'sadness': [(-1, 1)],
-    ...                             'surprise': [(1, 2), (1, 4)]}
-    True
-
     """
-    get_sentiment_cat = lambda x: x[1]
-    get_sentiment_score = lambda x: x[0]
-    get_index = lambda x: x[3]
+
+    get = lambda key, x: x[
+        {
+            "sentiment_score": 0,
+            "sentiment_cat": 1,
+            "index": 3
+        }[key]
+    ]
 
     sentiment_timeline = {
         "sadness": [],
@@ -53,8 +42,8 @@ def reshape_transform(objs):
     }
 
     for obj in objs:
-        data = (get_sentiment_score(obj), get_index(obj))
-        sentiment_timeline[get_sentiment_cat(obj)].append(data)
+        data = (get("sentiment_score", obj), get("index", obj))
+        sentiment_timeline[get("sentiment_cat", obj)].append(data)
 
     return sentiment_timeline
 
@@ -69,26 +58,15 @@ def get_max_len(timelines):
     -------
     int
         The bigest index value.
-
-    Example
-    -------
-    >>> tmls = [{"k1": [(1, 1), (1, 3), (1, 5)], "k2": [(3, 4), (4, 20)]}, {"k1": [(3, 15)]}]
-    >>> get_max_len(tmls)
-    20
     """
-    max_len = -1
+    max_lens = []
     for timeline in timelines:
-        for key in timeline.keys():
-            try:
-                local_max = max(timeline[key], key=lambda x: x[1])[1]
-                if local_max > max_len:
-                    max_len = local_max
-            except ValueError:
-                continue
+        for val in timeline.values():
+            max_lens += max(val) if val else [-1]
 
-    return max_len
+    return max(max_lens)
 
-def fill(sentiment_range, length):
+def fill(sentiment_range, length, memo={}):
     """Fills unindexed entries with 0s
 
     Parameters
@@ -104,14 +82,11 @@ def fill(sentiment_range, length):
     -------
     new_range : list of int
         List of magnitudes of sentiments in chronological order.
-
-    Example
-    -------
-    >>> my_range = [(1, 0), (-1, 3), (1, 5), (-1, 6)]
-    >>> fill(my_range, 8)
-    [1, 0, 0, -1, 0, 1, -1, 0]
     """
-    new_range = [0 for _ in range(length)]
+    if not memo.has_key(length):
+        memo[length] = [0 for _ in range(length)]
+
+    new_range = memo[length]
     for val, i in sentiment_range:
         new_range[i] = val
 
@@ -143,6 +118,19 @@ def cosine_similarity(x_vector, y_vector):
 
     return numerator / (denominator or 1e-5)
 
+def _validate_input_vector(func):
+    def __inner(vector, *args, **kwargs):
+        vector_len = len(vector)
+        if vector_len < 100: # 'vector' should be at least 100 elements long
+            valid_vector = [*vector, *[0 for _ in range(100 - vector_len)]]
+            result = func(valid_vector, *args, **kwargs)
+        else:
+            result = func(vector, *args, **kwargs)
+
+        return result
+    return __inner
+
+@_validate_input_vector
 def chunk_sum(vector):
     """It is safe given that the len(vector) >= 100.
 
@@ -153,14 +141,6 @@ def chunk_sum(vector):
     Returns
     -------
     list of Numbers
-
-    Example
-    -------
-    >>> x = range(1000)
-    >>> chunk_sum(x) == [x * 100 + 45 for x in range(100)]
-    True
-    >>> chunk_sum(range(100)) == list(range(100))
-    True
     """
 
     def _chunks(vector):

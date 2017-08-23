@@ -8,7 +8,8 @@ This module provides utility functions.
 
 import json
 import os
-import requests
+
+from .db_utils import get_book_by
 
 PATH = os.path.abspath(os.path.dirname(__file__))
 
@@ -32,59 +33,14 @@ def get_config(config_file_path=os.path.join(PATH, "config.json")):
     with open(config_file_path) as config_ptr:
         return json.load(config_ptr)
 
-def db_fetch(db_service_url, constraints):
-    """Wraps the underling request to the database service.
-
-    Parameters
-    ----------
-    db_service_url : str
-    constraints : dict
-        The PyMongo-style query object.
-
-    Returns
-    -------
-    dict
-        The result of the applied query.
-    """
-    resp = requests.post(db_service_url + "/fetch",
-                         json={"constraints": json.dumps(constraints)},
-                         headers={"content-type": "application/json"})
-    return json.loads(resp.content.decode("utf-8"))
-
-def get_book_by(field_name, addr, field_value):
-    """Facade function to make the API for fetching the database more uniform
-    and to reduce the number of imported functions"""
-    if field_name == "id":
-        data = _get_book_by_id(addr, field_value)
-    elif field_name == "author_or_title":
-        data = _search_by_auth_or_title(addr, field_value)
-    else:
-        raise KeyError("Function get_book_by not defined for field_name '{}', \
-available options are {}".format(field_name, ["id", "author_or_title"]))
-
-    return data
-
-def _get_book_by_id(addr, book_id):
-    """Get book by MongoDB ID"""
-    return db_fetch(addr, {"id": book_id})
-
-def _search_by_auth_or_title(addr, search_token):
-    """Given a string, perform a regex search over `author` and `title` fields of a book."""
-    token = search_token.lower()
-    return db_fetch(addr, {"$or": [{"metadata.author": {"$regex": r"({})\w*".format(token),
-                                                        "$options": "i"}},
-                                   {"metadata.title":  {"$regex": r"({})\w*".format(token),
-                                                        "$options": "i"}}]})
-
 def _preprocess_filter(key, obj, default_dict):
     """If filter object, at the given `key` has value 1,
     it modifies the `default_dict` else it leaves it untouched.
     The only inconvenience is that the change is in place.
     """
-    kv_pairs = obj[key].items()
-    [default_dict.update({"genre.{0}.labels.{1}".format(key, k): v}) for k, v in kv_pairs if v == 1]
-    #       ^^^^^^^^^^^^^
-    # [WARNING] change in-place
+    [default_dict.update({"genre.{0}.labels.{1}".format(key, k): v}) # [WARNING] change in-place
+     for k, v in obj[key].items() if v == 1]
+
     return default_dict
 
 def make_query(obj):
@@ -113,7 +69,7 @@ def make_query(obj):
 
     return {
         "$or": [
-            {"metadata.author": {"$regex": r"({})\w*".format(author.lower() if author else ""),
+            {"metadata.author": {"$regex": r"({})\w*".format(author if author else ""),
                                  "$options": "i"}},
             {**characters}, {**space}
         ]
@@ -127,7 +83,7 @@ def _get_full_objs_decorator(func):
     From [{"score": float, "title": str}]
     To   [{"score": float, "title": obj] where obj is similart
     to the response from "/api/v1/books/<book_id>" endpoit but with the `sentiment.overall` field
-    now containing 2 keys, `current` and `base`.
+    now containing 2 items, on index 0 the base book's object and on index 1 the current's one.
     """
     addr = get_config()["mongo_rest_interface_addr"]
     get_obj = lambda t: json.loads(preprocess_resp(get_book_by("author_or_title", addr, t)))[0]
@@ -142,25 +98,23 @@ def _get_full_objs_decorator(func):
         for kvs in tail_objs:
             kvs["title"] = get_obj(kvs["title"])
 
-            kvs["title"]["sentiment"]["overall"] = [get_overall_sentiment(base_obj), get_overall_sentiment(kvs["title"])]
+            kvs["title"]["sentiment"]["overall"] = [get_overall_sentiment(base_obj),
+                                                    get_overall_sentiment(kvs["title"])]
         _, *top_matches = resp["resp"]
         return top_matches
     return __inner
 
 @_get_full_objs_decorator
 def get_sorted(base_title, scores, top_n=5):
-    """Sorts the respond body and shapes it before sending over the network"""
+    """Sorts the respond body and reshapes it before sending over the network"""
     return {"resp": list(sorted(scores[base_title],
                                 key=lambda x: x["score"], reverse=True))[:top_n + 1]}
-
 
 def _reshape_timeline(checkpoints):
     return map(lambda x: x, checkpoints)
 
 def preprocess_resp(raw_resp):
-    """Transforma the sentiment timeline dict of the response body.
-
-    It's ugly as hell, sorry.
+    """Transform the sentiment timeline dict of the response body.
 
     Parameters
     ----------
@@ -172,8 +126,6 @@ def preprocess_resp(raw_resp):
     resp : list
         List with dictionaries with modified structure of the value under
         the `timeline` key of the `sentiment` dictionary
-    dict
-        {"Content-Type": "application/json"}
 
     Example
     -------
@@ -189,12 +141,9 @@ def preprocess_resp(raw_resp):
     '[{"sentiment": {"timeline": [[1, "joy", "hope", 1936], [1, "joy", "hope", 3597]]}}]'
     """
     resp = json.loads(raw_resp)["resp"]
-    condition = len(resp)
-    if condition == 1:
-        timeline = _reshape_timeline(resp[0]["sentiment"]["timeline"])
-        resp[0]["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
-    elif condition > 1:
-        timelines = [_reshape_timeline(r["sentiment"]["timeline"]) for r in resp]
-        [r["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
-         for r, timeline in zip(resp, timelines)]
+
+    timelines = [_reshape_timeline(r["sentiment"]["timeline"]) for r in resp]
+    [r["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
+     for r, timeline in zip(resp, timelines)]
+
     return json.dumps(resp)
