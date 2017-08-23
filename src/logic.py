@@ -86,11 +86,11 @@ def fill(sentiment_range, length, memo={}):
     if not length in memo:
         memo[length] = [0 for _ in range(length)]
 
-    new_range = memo[length]
+    sentiment_vector = memo[length][:]
     for val, i in sentiment_range:
-        new_range[i] = val
+        sentiment_vector[i] = val
 
-    return new_range
+    return sentiment_vector
 
 def fill_obj(obj, length):
     """Applies `fill` to all values of a given object"""
