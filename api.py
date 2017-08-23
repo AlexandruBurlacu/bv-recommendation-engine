@@ -11,9 +11,9 @@ import logging
 from logging.handlers import RotatingFileHandler
 from flask import Flask, request
 
-from logic import get_candidates
-from utils import get_config, get_sorted, make_query, preprocess_resp
-from db_utils import get_book_by, db_fetch
+from src.logic import get_candidates
+from src.utils import get_config, get_sorted, make_query, preprocess_resp
+from src.db_utils import get_book_by, db_fetch
 
 app = Flask(__name__)
 

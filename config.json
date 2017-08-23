@@ -1,5 +1,0 @@
-{
-    "mongo_rest_interface_addr": "http://127.0.0.1:9000",
-    "log_file": "logs/info.log",
-    "log_format": "[%(asctime)s] {%(funcName)s in %(pathname)s:%(lineno)d} %(levelname)s - %(message)s"
-}
