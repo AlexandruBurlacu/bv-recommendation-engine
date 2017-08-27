@@ -123,19 +123,6 @@ def preprocess_resp(raw_resp):
     resp : list
         List with dictionaries with modified structure of the value under
         the `timeline` key of the `sentiment` dictionary
-
-    Example
-    -------
-    >>> obj =  \"""{"resp":
-    ...    [{"sentiment":
-    ...       {"timeline":
-    ...            [
-    ...                [1, "joy", "hope", 1936],
-    ...                [1, "joy", "hope", 3597]
-    ...           ]}
-    ...    }]}\"""
-    >>> preprocess_resp(obj)
-    '[{"sentiment": {"timeline": [[1, "joy", "hope", 1936], [1, "joy", "hope", 3597]]}}]'
     """
     resp = json.loads(raw_resp)["resp"]
 

@@ -10,8 +10,6 @@ class TestLogicModule(unittest.TestCase):
         self.assertEqual(M.reshape_transform(data), {'anger': [], 'fear': [(-1, 0), (-1, 3)],
                                                      'joy': [], 'love': [], 'sadness': [(-1, 1)],
                                                      'surprise': [(1, 2), (1, 4)]})
-    def test_reshape_transform_invalid_data(self):
-        NotImplemented
 
     def test_get_max_len_valid_data(self):
         tmls = [{"k1": [(1, 1), (1, 3), (1, 5)], "k2": [(3, 4), (4, 20)]}, {"k1": [(3, 15)]}]

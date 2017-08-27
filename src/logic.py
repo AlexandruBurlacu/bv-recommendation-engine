@@ -66,7 +66,7 @@ def get_max_len(timelines):
 
     return max(max_lens)
 
-def fill(sentiment_range, length, memo={}):
+def fill(sentiment_range, length, memo={}): # OPTIMIZE
     """Fills unindexed entries with 0s
 
     Parameters
@@ -92,7 +92,7 @@ def fill(sentiment_range, length, memo={}):
 
     return sentiment_vector
 
-def fill_obj(obj, length):
+def fill_obj(obj, length): # OPTIMIZE
     """Applies `fill` to all values of a given object"""
     for key in obj.keys():
         obj[key] = chunk_sum(fill(obj[key], length))
@@ -143,14 +143,14 @@ def chunk_sum(vector):
     list of Numbers
     """
 
-    def _chunks(vector):
+    def _chunks(vector): # OPTIMIZE
         size, counter = len(vector), 0
         chunk_size = int(size / 100)
         while counter < size:
             yield vector[counter : counter + chunk_size]
             counter += chunk_size
 
-    return [sum(piece) for piece in _chunks(vector)]
+    return [sum(piece) for piece in _chunks(vector)] # OPTIMIZE
 
 def similarity(base, vector):
     """Returns the cosine similarity over all fields of 2 dict objects"""
