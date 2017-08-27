@@ -110,9 +110,6 @@ def get_sorted(base_title, scores, top_n=5):
     return {"resp": list(sorted(scores[base_title],
                                 key=lambda x: x["score"], reverse=True))[:top_n + 1]}
 
-def _reshape_timeline(checkpoints):
-    return map(lambda x: x, checkpoints)
-
 def preprocess_resp(raw_resp):
     """Transform the sentiment timeline dict of the response body.
 
@@ -142,7 +139,7 @@ def preprocess_resp(raw_resp):
     """
     resp = json.loads(raw_resp)["resp"]
 
-    timelines = [_reshape_timeline(r["sentiment"]["timeline"]) for r in resp]
+    timelines = (r["sentiment"]["timeline"] for r in resp)
     [r["sentiment"].update({"timeline": list(timeline)}) # [WARNING] change in-place
      for r, timeline in zip(resp, timelines)]
 
