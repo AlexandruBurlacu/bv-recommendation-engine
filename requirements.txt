@@ -3,4 +3,4 @@ gevent==1.2.2
 gunicorn==19.7.1
 pylint==1.7.2
 requests==2.20.0
-urllib3==1.21.1
+urllib3==1.23.0
